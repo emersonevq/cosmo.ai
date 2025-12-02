@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "Cosmos AI",
     "send": "Enviar",
     "cancel": "Cancelar",
     "delete": "Deletar",
