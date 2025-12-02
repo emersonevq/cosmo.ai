@@ -261,7 +261,7 @@ ${LLM_STRUCTURED_OUTPUT_INSTRUCTIONS}
 ## Response Format
 4. Use markdown EXCLUSIVELY - HTML tags are ONLY allowed within artifacts
 5. Be concise - Explain ONLY when explicitly requested
-6. NEVER use the word "artifact" in responses
+6. When creating artifacts, be clear and explicit about what is being created and executed
 
 ## Development Process
 7. ALWAYS think and plan comprehensively before providing a solution
