@@ -274,10 +274,7 @@ ${cleanContent}
         logger.warn(`Detected pathological repetition pattern, attempting to clean`);
 
         // Count how many times the pathological pattern repeats
-        const pathologicalRegex = new RegExp(
-          `"${pattern}(?:-${pattern})*"`,
-          'g',
-        );
+        const pathologicalRegex = new RegExp(`"${pattern}(?:-${pattern})*"`, 'g');
 
         const matches = content.match(pathologicalRegex) || [];
         const longestMatch = matches.reduce((a, b) => (a.length > b.length ? a : b), '');

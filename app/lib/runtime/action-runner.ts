@@ -362,9 +362,7 @@ export class ActionRunner {
     }
   }
 
-  private _detectPathologicalRepetition(
-    content: string,
-  ): { isPathological: boolean; reason: string; cleaned: string } {
+  private _detectPathologicalRepetition(content: string): { isPathological: boolean; reason: string; cleaned: string } {
     // Detect pathological patterns like:
     // - Same line repeated 50+ times
     // - JSON array with 1000+ identical items
