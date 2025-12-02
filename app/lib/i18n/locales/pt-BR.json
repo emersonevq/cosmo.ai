@@ -39,7 +39,12 @@
     "editApiKey": "Editar chave de API",
     "getApiKey": "Obter chave de API",
     "apiKeyMissing": "Chave de API ausente para {provider}",
-    "authenticationFailed": "Falha na autenticação com {provider}. Verifique sua chave de API."
+    "authenticationFailed": "Falha na autenticação com {provider}. Verifique sua chave de API.",
+    "chatDeletedSuccessfully": "Conversa deletada com sucesso",
+    "failedToDeleteConversation": "Falha ao deletar conversa",
+    "deleteSelected": "Deletar selecionados",
+    "selectAtLeastOneChat": "Selecione pelo menos uma conversa para deletar",
+    "searchChats": "Pesquisar conversas..."
   },
   "sidebar": {
     "menu": "Menu",
