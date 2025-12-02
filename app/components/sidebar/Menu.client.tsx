@@ -476,7 +476,7 @@ export const Menu = () => {
                           closeDialog();
                         }}
                       >
-                        Delete
+                        {t('common.delete')}
                       </DialogButton>
                     </div>
                   </>
@@ -484,7 +484,7 @@ export const Menu = () => {
                 {dialogContent?.type === 'bulkDelete' && (
                   <>
                     <div className="p-6 bg-white dark:bg-gray-950">
-                      <DialogTitle className="text-gray-900 dark:text-white">Delete Selected Chats?</DialogTitle>
+                      <DialogTitle className="text-gray-900 dark:text-white">{t('chat.deleteSelected')}?</DialogTitle>
                       <DialogDescription className="mt-2 text-gray-600 dark:text-gray-400">
                         <p>
                           You are about to delete {dialogContent.items.length}{' '}
