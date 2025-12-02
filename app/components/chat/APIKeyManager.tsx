@@ -129,7 +129,7 @@ export const APIKeyManager: React.FC<APIKeyManagerProps> = ({ provider, apiKey, 
             />
             <IconButton
               onClick={handleSave}
-              title="Save API Key"
+              title={t('chat.saveAPIKey')}
               className="bg-green-500/10 hover:bg-green-500/20 text-green-500"
             >
               <div className="i-ph:check w-4 h-4" />
