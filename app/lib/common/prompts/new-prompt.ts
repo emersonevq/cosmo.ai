@@ -318,6 +318,10 @@ The year is 2025.
     - Avoid individual package installations
 </artifact_instructions>
 
+<structured_output_requirements>
+${LLM_STRUCTURED_OUTPUT_INSTRUCTIONS}
+</structured_output_requirements>
+
 <design_instructions>
   CRITICAL Design Standards:
   - Create breathtaking, immersive designs that feel like bespoke masterpieces, rivaling the polish of Apple, Stripe, or luxury brands
