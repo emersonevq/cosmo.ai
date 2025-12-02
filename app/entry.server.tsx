@@ -15,57 +15,44 @@ export default async function handleRequest(
 ) {
   // await initializeModelList({});
 
-  const readable = await renderToReadableStream(<RemixServer context={remixContext} url={request.url} />, {
-    signal: request.signal,
+  const stream = renderToPipeableStream(<RemixServer context={remixContext} url={request.url} />, {
     onError(error: unknown) {
       console.error(error);
       responseStatusCode = 500;
     },
   });
 
+  const head = renderHeadToString({ request, remixContext, Head });
+  const htmlStart = `<!DOCTYPE html><html lang="en" data-theme="${themeStore.value}"><head>${head}</head><body><div id="root" class="w-full h-full">`;
+  const htmlEnd = '</div></body></html>';
+
   const body = new ReadableStream({
-    start(controller) {
-      const head = renderHeadToString({ request, remixContext, Head });
+    async start(controller) {
+      controller.enqueue(new Uint8Array(new TextEncoder().encode(htmlStart)));
 
-      controller.enqueue(
-        new Uint8Array(
-          new TextEncoder().encode(
-            `<!DOCTYPE html><html lang="en" data-theme="${themeStore.value}"><head>${head}</head><body><div id="root" class="w-full h-full">`,
-          ),
-        ),
-      );
+      await new Promise<void>((resolve, reject) => {
+        stream.on('data', (chunk: Buffer) => {
+          controller.enqueue(new Uint8Array(chunk));
+        });
 
-      const reader = readable.getReader();
+        stream.on('end', () => {
+          controller.enqueue(new Uint8Array(new TextEncoder().encode(htmlEnd)));
+          controller.close();
+          resolve();
+        });
 
-      function read() {
-        reader
-          .read()
-          .then(({ done, value }) => {
-            if (done) {
-              controller.enqueue(new Uint8Array(new TextEncoder().encode('</div></body></html>')));
-              controller.close();
-
-              return;
-            }
-
-            controller.enqueue(value);
-            read();
-          })
-          .catch((error) => {
-            controller.error(error);
-            readable.cancel();
-          });
-      }
-      read();
-    },
-
-    cancel() {
-      readable.cancel();
+        stream.on('error', (error: Error) => {
+          controller.error(error);
+          reject(error);
+        });
+      });
     },
   });
 
   if (isbot(request.headers.get('user-agent') || '')) {
-    await readable.allReady;
+    await new Promise<void>((resolve) => {
+      stream.on('end', () => resolve());
+    });
   }
 
   responseHeaders.set('Content-Type', 'text/html');
