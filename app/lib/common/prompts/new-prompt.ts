@@ -2,6 +2,7 @@ import type { DesignScheme } from '~/types/design-scheme';
 import { WORK_DIR } from '~/utils/constants';
 import { allowedHTMLElements } from '~/utils/markdown';
 import { stripIndents } from '~/utils/stripIndent';
+import { LLM_STRUCTURED_OUTPUT_INSTRUCTIONS } from '~/lib/common/llm-output-validator';
 
 export const getFineTunedPrompt = (
   cwd: string = WORK_DIR,
