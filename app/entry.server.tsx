@@ -3,6 +3,7 @@ import { RemixServer } from '@remix-run/react';
 import { isbot } from 'isbot';
 import { renderToPipeableStream } from 'react-dom/server';
 import { renderHeadToString } from 'remix-island';
+import { PassThrough } from 'node:stream';
 import { Head } from './root';
 import { themeStore } from '~/lib/stores/theme';
 
