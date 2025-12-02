@@ -14,6 +14,7 @@ import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
 import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
 import { profileStore } from '~/lib/stores/profile';
+import { useTranslation } from '~/lib/i18n';
 
 const menuVariants = {
   closed: {
