@@ -19,41 +19,45 @@ export default async function handleRequest(
   const htmlStart = `<!DOCTYPE html><html lang="en" data-theme="${themeStore.value}"><head>${head}</head><body><div id="root" class="w-full h-full">`;
   const htmlEnd = '</div></body></html>';
 
-  const passThrough = new PassThrough();
+  let shellReady = false;
+  let allReady = false;
 
   const stream = renderToPipeableStream(<RemixServer context={remixContext} url={request.url} />, {
+    onShellReady() {
+      shellReady = true;
+    },
+    onAllReady() {
+      allReady = true;
+    },
     onError(error: unknown) {
       console.error(error);
       responseStatusCode = 500;
     },
   });
 
-  let shellRendered = false;
-
-  stream.on('shellReady', () => {
-    shellRendered = true;
-    passThrough.write(htmlStart);
-    stream.pipe(passThrough);
-  });
-
-  stream.on('error', (error: unknown) => {
-    console.error('Stream error:', error);
-  });
-
   const body = new ReadableStream({
     async start(controller) {
+      // Enqueue the HTML start
+      controller.enqueue(new Uint8Array(new TextEncoder().encode(htmlStart)));
+
+      // Pipe the Node stream to the Web ReadableStream
       await new Promise<void>((resolve, reject) => {
-        passThrough.on('data', (chunk: Buffer) => {
-          controller.enqueue(new Uint8Array(chunk));
+        stream.on('data', (chunk: Buffer | Uint8Array) => {
+          if (chunk instanceof Uint8Array) {
+            controller.enqueue(chunk);
+          } else {
+            controller.enqueue(new Uint8Array(chunk));
+          }
         });
 
-        passThrough.on('end', () => {
+        stream.on('end', () => {
           controller.enqueue(new Uint8Array(new TextEncoder().encode(htmlEnd)));
           controller.close();
           resolve();
         });
 
-        passThrough.on('error', (error: Error) => {
+        stream.on('error', (error: unknown) => {
+          console.error('Stream error:', error);
           controller.error(error);
           reject(error);
         });
@@ -63,8 +67,15 @@ export default async function handleRequest(
 
   if (isbot(request.headers.get('user-agent') || '')) {
     await new Promise<void>((resolve, reject) => {
-      stream.on('allReady', resolve);
-      stream.on('error', reject);
+      const checkReady = () => {
+        if (allReady) {
+          resolve();
+        } else {
+          stream.once('allReady', resolve);
+          stream.once('error', reject);
+        }
+      };
+      checkReady();
     });
   }
 
