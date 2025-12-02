@@ -136,7 +136,7 @@ export const APIKeyManager: React.FC<APIKeyManagerProps> = ({ provider, apiKey, 
             </IconButton>
             <IconButton
               onClick={() => setIsEditing(false)}
-              title="Cancel"
+              title={t('common.cancel')}
               className="bg-red-500/10 hover:bg-red-500/20 text-red-500"
             >
               <div className="i-ph:x w-4 h-4" />
