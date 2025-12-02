@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { IconButton } from '~/components/ui/IconButton';
 import type { ProviderInfo } from '~/types/model';
 import Cookies from 'js-cookie';
+import { useTranslation } from '~/lib/i18n';
 
 interface APIKeyManagerProps {
   provider: ProviderInfo;
