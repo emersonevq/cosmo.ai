@@ -1,4 +1,5 @@
-import { createContext, ReactNode, useMemo, useState } from 'react';
+import { createContext, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import ptBR from './locales/pt-BR.json';
 
 export type Locale = 'pt-BR';
