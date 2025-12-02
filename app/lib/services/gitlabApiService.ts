@@ -443,7 +443,7 @@ export class GitLabApiService {
 
       const commitRequest: GitLabCommitRequest = {
         branch: 'main',
-        commit_message: 'Initial commit from Bolt.diy',
+        commit_message: 'Initial commit from Cosmos AI',
         actions,
       };
 
