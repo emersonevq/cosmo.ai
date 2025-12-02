@@ -519,7 +519,7 @@ export const Menu = () => {
                           closeDialog();
                         }}
                       >
-                        Delete
+                        {t('common.delete')}
                       </DialogButton>
                     </div>
                   </>
