@@ -9,6 +9,9 @@ import type { BoltShell } from '~/utils/shell';
 
 const logger = createScopedLogger('ActionRunner');
 
+// File size limits to prevent memory issues and malformed data
+const MAX_FILE_SIZE = 1024 * 1024; // 1MB per file
+
 export type ActionStatus = 'pending' | 'running' | 'complete' | 'aborted' | 'failed';
 
 export type BaseActionState = BoltAction & {
@@ -321,6 +324,27 @@ export class ActionRunner {
     // remove trailing slashes
     folder = folder.replace(/\/+$/g, '');
 
+    // Validate file content before writing
+    let content = action.content;
+
+    // Check file size
+    if (content.length > MAX_FILE_SIZE) {
+      logger.error(`File ${relativePath} exceeds maximum size (${content.length} > ${MAX_FILE_SIZE}), truncating`);
+      this.#updateAction(action.type === 'file' ? action.filePath : '', {
+        status: 'failed',
+        error: `File size ${content.length} bytes exceeds maximum of ${MAX_FILE_SIZE} bytes. Possible malformed content detected.`,
+      });
+      return;
+    }
+
+    // Detect and warn about pathological repetition patterns
+    const repetitionCheck = this._detectPathologicalRepetition(content);
+    if (repetitionCheck.isPathological) {
+      logger.warn(`Pathological repetition detected in ${relativePath}: ${repetitionCheck.reason}`);
+      // Clean the content
+      content = repetitionCheck.cleaned;
+    }
+
     if (folder !== '.') {
       try {
         await webcontainer.fs.mkdir(folder, { recursive: true });
@@ -331,17 +355,81 @@ export class ActionRunner {
     }
 
     try {
-      await webcontainer.fs.writeFile(relativePath, action.content);
+      await webcontainer.fs.writeFile(relativePath, content);
       logger.debug(`File written ${relativePath}`);
     } catch (error) {
       logger.error('Failed to write file\n\n', error);
     }
   }
 
+  private _detectPathologicalRepetition(content: string): { isPathological: boolean; reason: string; cleaned: string } {
+    // Detect pathological patterns like:
+    // - Same line repeated 50+ times
+    // - JSON array with 1000+ identical items
+    // - Nested repetitions (e.g., "a-a-a-a-a-a")
+
+    const lines = content.split('\n');
+    const lineFrequency = new Map<string, number>();
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.length > 0) {
+        lineFrequency.set(trimmed, (lineFrequency.get(trimmed) || 0) + 1);
+      }
+    }
+
+    // Check if any single line appears more than 50 times (pathological)
+    for (const [line, count] of lineFrequency.entries()) {
+      if (count > 50 && !this._isValidRepetition(line)) {
+        // This is likely malformed content
+        const cleaned = content
+          .split('\n')
+          .filter((l) => l.trim() !== line || lineFrequency.get(l.trim())! < 4) // Keep only first 3 occurrences
+          .join('\n');
+
+        return {
+          isPathological: true,
+          reason: `Line repeated ${count} times: "${line.substring(0, 40)}..."`,
+          cleaned,
+        };
+      }
+    }
+
+    // Check for nested repetition patterns (e.g., "expo-expo-expo-expo")
+    const nestedRepetitionRegex = /(\w+)((-|_)\1){5,}/g;
+    const matches = content.match(nestedRepetitionRegex);
+
+    if (matches && matches.length > 0) {
+      const cleaned = content.replace(nestedRepetitionRegex, '$1');
+      return {
+        isPathological: true,
+        reason: `Nested repetition detected: ${matches[0]}`,
+        cleaned,
+      };
+    }
+
+    return { isPathological: false, reason: '', cleaned: content };
+  }
+
+  private _isValidRepetition(line: string): boolean {
+    // Some content legitimately repeats, like:
+    // - Borders/lines (===, ---, etc)
+    // - Empty lines
+    // - Indentation patterns
+
+    if (line.length === 0) return true;
+    if (/^[=\-*\s]+$/.test(line)) return true; // Visual separators
+    if (/^\s+$/.test(line)) return true; // Only whitespace
+
+    return false;
+  }
+
   #updateAction(id: string, newState: ActionStateUpdate) {
     const actions = this.actions.get();
 
-    this.actions.setKey(id, { ...actions[id], ...newState });
+    if (actions[id]) {
+      this.actions.setKey(id, { ...actions[id], ...newState });
+    }
   }
 
   async getFileHistory(filePath: string): Promise<FileHistory | null> {

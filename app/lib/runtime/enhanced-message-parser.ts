@@ -12,6 +12,10 @@ export class EnhancedStreamingMessageParser extends StreamingMessageParser {
   private _processedCodeBlocks = new Map<string, Set<string>>();
   private _artifactCounter = 0;
 
+  // File size limits to prevent memory issues
+  private readonly MAX_FILE_SIZE = 1024 * 1024; // 1MB per file
+  private readonly MAX_ARTIFACT_SIZE = 5 * 1024 * 1024; // 5MB per artifact
+
   // Optimized command pattern lookup
   private _commandPatternMap = new Map<string, RegExp>([
     ['npm', /^(npm|yarn|pnpm)\s+(install|run|start|build|dev|test|init|create|add|remove)/],
@@ -204,19 +208,97 @@ export class EnhancedStreamingMessageParser extends StreamingMessageParser {
   private _wrapInArtifact(artifactId: string, filePath: string, content: string): string {
     const title = filePath.split('/').pop() || 'File';
 
-    return `<boltArtifact id="${artifactId}" title="${title}" type="bundled">
+    // Validate and clean content to prevent repetitive patterns
+    let cleanContent = this._validateAndCleanContent(content);
+
+    // Check file size
+    if (cleanContent.length > this.MAX_FILE_SIZE) {
+      logger.warn(`File ${filePath} exceeds maximum size (${cleanContent.length} > ${this.MAX_FILE_SIZE}), truncating`);
+      cleanContent = cleanContent.substring(0, this.MAX_FILE_SIZE);
+    }
+
+    return `<boltArtifact id="${artifactId}" title="${title}">
 <boltAction type="file" filePath="${filePath}">
-${content}
+${cleanContent}
 </boltAction>
 </boltArtifact>`;
+  }
+
+  private _validateAndCleanContent(content: string): string {
+    // Detect and remove repetitive patterns (e.g., repeated array items)
+    // This catches cases where AI generates things like:
+    // "expo-screens", "expo-screens", "expo-screens", ... hundreds of times
+
+    const lines = content.split('\n');
+    const seenPatterns = new Map<string, number>();
+    const cleanedLines: string[] = [];
+    let lastLine = '';
+
+    for (const line of lines) {
+      // Skip if line is identical to the previous one (common repetition)
+      if (line === lastLine) {
+        // Check if we've seen this pattern too many times in a row
+        seenPatterns.set(line, (seenPatterns.get(line) || 0) + 1);
+
+        // Allow up to 3 consecutive identical lines (reasonable for some formats)
+        if (seenPatterns.get(line)! > 3) {
+          logger.warn(`Detected repetitive content, skipping repeated line: ${line.substring(0, 50)}...`);
+          continue;
+        }
+      } else {
+        seenPatterns.clear();
+      }
+
+      cleanedLines.push(line);
+      lastLine = line;
+    }
+
+    // Also detect pattern repetition (e.g., similar strings with only incremental changes)
+    return this._detectPatternRepetition(cleanedLines.join('\n'));
+  }
+
+  private _detectPatternRepetition(content: string): string {
+    // Detect when the same pattern is repeated with slight variations
+    // Example: "plugin1", "plugin1-plugin1", "plugin1-plugin1-plugin1", etc.
+
+    // For JSON arrays, detect when items are being duplicated
+    const jsonArrayMatch = content.match(/\[\s*"(.+?)"\s*,\s*"\1([^"]*?)"\s*,/);
+
+    if (jsonArrayMatch) {
+      // Check if we have a pathological repetition pattern
+      const pattern = jsonArrayMatch[1];
+      const variation = jsonArrayMatch[2];
+
+      // If the variation is just the pattern repeated, this is a bug
+      if (variation.startsWith('-' + pattern) || variation.startsWith('_' + pattern)) {
+        logger.warn(`Detected pathological repetition pattern, attempting to clean`);
+
+        // Count how many times the pathological pattern repeats
+        const pathologicalRegex = new RegExp(`"${pattern}(?:-${pattern})*"`, 'g');
+
+        const matches = content.match(pathologicalRegex) || [];
+        const longestMatch = matches.reduce((a, b) => (a.length > b.length ? a : b), '');
+
+        // If the longest repetition is suspiciously long, replace all with just one instance
+        if (longestMatch.length > pattern.length * 5) {
+          logger.warn(`Removing pathological repetition (found ${longestMatch.length} chars)`);
+          return content.replace(pathologicalRegex, `"${pattern}"`);
+        }
+      }
+    }
+
+    return content;
   }
 
   private _wrapInShellAction(content: string, messageId: string): string {
     const artifactId = `artifact-${messageId}-${this._artifactCounter++}`;
 
-    return `<boltArtifact id="${artifactId}" title="Shell Command" type="shell">
+    // Clean shell commands from repetitive content
+    let cleanContent = this._validateAndCleanContent(content.trim());
+
+    return `<boltArtifact id="${artifactId}" title="Shell Command">
 <boltAction type="shell">
-${content.trim()}
+${cleanContent}
 </boltAction>
 </boltArtifact>`;
   }
