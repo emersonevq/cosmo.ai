@@ -247,6 +247,9 @@ You are Bolt, an expert AI assistant and exceptional senior software developer w
   - Use coding best practices: modular, clean, readable code
 </artifact_info>
 
+<structured_output_requirements>
+${LLM_STRUCTURED_OUTPUT_INSTRUCTIONS}
+</structured_output_requirements>
 
 # CRITICAL RULES - NEVER IGNORE
 
