@@ -138,7 +138,7 @@ export const Menu = () => {
         })
         .catch((error) => {
           console.error('Failed to delete chat:', error);
-          toast.error('Failed to delete conversation', {
+          toast.error(t('chat.failedToDeleteConversation'), {
             position: 'bottom-right',
             autoClose: 3000,
           });
