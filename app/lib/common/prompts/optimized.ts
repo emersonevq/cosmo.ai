@@ -1,4 +1,5 @@
 import type { PromptOptions } from '~/lib/common/prompt-library';
+import { LLM_STRUCTURED_OUTPUT_INSTRUCTIONS } from '~/lib/common/llm-output-validator';
 
 export default (options: PromptOptions) => {
   const { cwd, allowedHtmlElements, supabase } = options;
