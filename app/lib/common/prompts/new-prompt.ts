@@ -267,6 +267,19 @@ The year is 2025.
     - start: Starting project (use ONLY for project startup, LAST action)
     - file: Creating/updating files (add filePath and contentType attributes)
 
+  CRITICAL - PROJECT STARTUP RULE:
+    ⚠️ ABSOLUTELY MANDATORY FOR WEB PROJECTS:
+    - If you create a web project (React, Vue, Next.js, Vite, etc), you MUST ALWAYS end with <boltAction type="start">
+    - NEVER forget to start the dev server - users need to SEE the project running
+    - Example correct ending:
+      </boltAction>
+      <boltAction type="start">
+      npm run dev
+      </boltAction>
+      </boltArtifact>
+    - If you forget this, the project will be created but NOT visible to the user (TOTAL FAILURE)
+    - Check EVERY project you create - if it needs a dev server, ADD THE START ACTION
+
   File Action Rules:
     - Only include new/modified files
     - ALWAYS add contentType attribute
@@ -277,7 +290,8 @@ The year is 2025.
     - Create files BEFORE shell commands that depend on them
     - Update package.json FIRST, then install dependencies
     - Configuration files before initialization commands
-    - Start command LAST
+    - Shell commands that modify files (npm install, etc)
+    - **START COMMAND ALWAYS LAST** (if creating a web project)
 
   Dependencies:
     - Update package.json with ALL dependencies upfront
