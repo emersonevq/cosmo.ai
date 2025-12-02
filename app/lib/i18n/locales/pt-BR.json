@@ -57,7 +57,9 @@
     "logout": "Sair",
     "recentChats": "Conversas recentes",
     "starred": "Marcados com estrela",
-    "archived": "Arquivados"
+    "archived": "Arquivados",
+    "youAreAboutToDelete": "Você está prestes a deletar",
+    "deleteConfirmation": "Tem certeza que deseja deletar?"
   },
   "settings": {
     "profile": "Perfil",
