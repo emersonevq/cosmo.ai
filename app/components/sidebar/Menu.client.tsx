@@ -65,6 +65,7 @@ function CurrentDateTime() {
 }
 
 export const Menu = () => {
+  const { t } = useTranslation();
   const { duplicateCurrentChat, exportChat } = useChatHistory();
   const menuRef = useRef<HTMLDivElement>(null);
   const [list, setList] = useState<ChatHistoryItem[]>([]);
