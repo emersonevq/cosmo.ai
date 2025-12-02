@@ -411,7 +411,7 @@ export const Menu = () => {
                   onClick={handleBulkDeleteClick}
                   disabled={selectedItems.length === 0}
                 >
-                  Delete selected
+                  {t('chat.deleteSelected')}
                 </Button>
               </div>
             )}
