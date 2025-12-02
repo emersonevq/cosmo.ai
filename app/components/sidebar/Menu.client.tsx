@@ -456,7 +456,7 @@ export const Menu = () => {
                       <DialogTitle className="text-gray-900 dark:text-white">{t('common.delete')}?</DialogTitle>
                       <DialogDescription className="mt-2 text-gray-600 dark:text-gray-400">
                         <p>
-                          You are about to delete{' '}
+                          {t('sidebar.youAreAboutToDelete')}{' '}
                           <span className="font-medium text-gray-900 dark:text-white">
                             {dialogContent.item.description}
                           </span>
