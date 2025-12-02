@@ -228,7 +228,7 @@ export const Menu = () => {
 
   const handleBulkDeleteClick = useCallback(() => {
     if (selectedItems.length === 0) {
-      toast.info('Select at least one chat to delete');
+      toast.info(t('chat.selectAtLeastOneChat'));
       return;
     }
 
