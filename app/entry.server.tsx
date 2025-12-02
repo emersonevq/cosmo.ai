@@ -16,6 +16,12 @@ export default async function handleRequest(
 ) {
   // await initializeModelList({});
 
+  const head = renderHeadToString({ request, remixContext, Head });
+  const htmlStart = `<!DOCTYPE html><html lang="en" data-theme="${themeStore.value}"><head>${head}</head><body><div id="root" class="w-full h-full">`;
+  const htmlEnd = '</div></body></html>';
+
+  const passThrough = new PassThrough();
+
   const stream = renderToPipeableStream(<RemixServer context={remixContext} url={request.url} />, {
     onError(error: unknown) {
       console.error(error);
@@ -23,26 +29,32 @@ export default async function handleRequest(
     },
   });
 
-  const head = renderHeadToString({ request, remixContext, Head });
-  const htmlStart = `<!DOCTYPE html><html lang="en" data-theme="${themeStore.value}"><head>${head}</head><body><div id="root" class="w-full h-full">`;
-  const htmlEnd = '</div></body></html>';
+  let shellRendered = false;
+
+  stream.on('shellReady', () => {
+    shellRendered = true;
+    passThrough.write(htmlStart);
+    stream.pipe(passThrough);
+  });
+
+  stream.on('error', (error: unknown) => {
+    console.error('Stream error:', error);
+  });
 
   const body = new ReadableStream({
     async start(controller) {
-      controller.enqueue(new Uint8Array(new TextEncoder().encode(htmlStart)));
-
       await new Promise<void>((resolve, reject) => {
-        stream.on('data', (chunk: Buffer) => {
+        passThrough.on('data', (chunk: Buffer) => {
           controller.enqueue(new Uint8Array(chunk));
         });
 
-        stream.on('end', () => {
+        passThrough.on('end', () => {
           controller.enqueue(new Uint8Array(new TextEncoder().encode(htmlEnd)));
           controller.close();
           resolve();
         });
 
-        stream.on('error', (error: Error) => {
+        passThrough.on('error', (error: Error) => {
           controller.error(error);
           reject(error);
         });
@@ -51,8 +63,9 @@ export default async function handleRequest(
   });
 
   if (isbot(request.headers.get('user-agent') || '')) {
-    await new Promise<void>((resolve) => {
-      stream.on('end', () => resolve());
+    await new Promise<void>((resolve, reject) => {
+      stream.on('allReady', resolve);
+      stream.on('error', reject);
     });
   }
 
