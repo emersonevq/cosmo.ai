@@ -487,8 +487,8 @@ export const Menu = () => {
                       <DialogTitle className="text-gray-900 dark:text-white">{t('chat.deleteSelected')}?</DialogTitle>
                       <DialogDescription className="mt-2 text-gray-600 dark:text-gray-400">
                         <p>
-                          You are about to delete {dialogContent.items.length}{' '}
-                          {dialogContent.items.length === 1 ? 'chat' : 'chats'}:
+                          {t('sidebar.youAreAboutToDelete')} {dialogContent.items.length}{' '}
+                          {dialogContent.items.length === 1 ? t('chat.newChat') : 'conversas'}:
                         </p>
                         <div className="mt-2 max-h-32 overflow-auto border border-gray-100 dark:border-gray-800 rounded-md bg-gray-50 dark:bg-gray-900 p-2">
                           <ul className="list-disc pl-5 space-y-1">
