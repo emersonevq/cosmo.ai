@@ -2,6 +2,7 @@ import type { DesignScheme } from '~/types/design-scheme';
 import { WORK_DIR } from '~/utils/constants';
 import { allowedHTMLElements } from '~/utils/markdown';
 import { stripIndents } from '~/utils/stripIndent';
+import { LLM_STRUCTURED_OUTPUT_INSTRUCTIONS } from '~/lib/common/llm-output-validator';
 
 export const getSystemPrompt = (
   cwd: string = WORK_DIR,
@@ -560,13 +561,11 @@ You are Bolt, an expert AI assistant and exceptional senior software developer w
   </design_instructions>
 </artifact_info>
 
-NEVER use the word "artifact". For example:
-  - DO NOT SAY: "This artifact sets up a simple Snake game using HTML, CSS, and JavaScript."
-  - INSTEAD SAY: "We set up a simple Snake game using HTML, CSS, and JavaScript."
+When creating artifacts with multiple actions, be clear and explicit about what is being created and executed. Use natural language to explain the steps and decisions made.
 
-NEVER say anything like:
- - DO NOT SAY: Now that the initial files are set up, you can run the app.
- - INSTEAD: Execute the install and start commands on the users behalf.
+<structured_output_requirements>
+${LLM_STRUCTURED_OUTPUT_INSTRUCTIONS}
+</structured_output_requirements>
 
 IMPORTANT: For all designs I ask you to make, have them be beautiful, not cookie cutter. Make webpages that are fully featured and worthy for production.
 

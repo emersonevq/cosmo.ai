@@ -270,6 +270,20 @@ export class ActionRunner {
       action.content = validationResult.modifiedCommand;
     }
 
+    // Alert if command is destructive
+    if (validationResult.isDestructive && validationResult.destructiveReason) {
+      const warningMessage = `Executing destructive command: ${validationResult.destructiveReason}\n\nCommand: ${action.content}\n\nThis operation cannot be undone. Ensure this is intentional.`;
+      logger.debug(`Destructive command detected: ${validationResult.destructiveReason}`);
+
+      this.onAlert?.({
+        type: 'warning',
+        title: 'Destructive Command Warning',
+        description: `About to execute: ${validationResult.destructiveReason}`,
+        content: warningMessage,
+        source: 'terminal',
+      });
+    }
+
     const resp = await shell.executeCommand(this.runnerId.get(), action.content, () => {
       logger.debug(`[${action.type}]:Aborting Action\n\n`, action);
       action.abort();
@@ -647,12 +661,40 @@ export class ActionRunner {
     });
   }
 
+  #isDestructiveCommand(command: string): { isDestructive: boolean; reason?: string } {
+    const trimmedCommand = command.trim().toLowerCase();
+
+    // List of destructive commands and patterns
+    const destructivePatterns = [
+      { pattern: /^\s*rm\s+/, reason: 'rm command (file deletion)' },
+      { pattern: /^\s*rmdir\s+/, reason: 'rmdir command (directory deletion)' },
+      { pattern: /^\s*rm\s+-r/, reason: 'rm -r command (recursive deletion)' },
+      { pattern: /^\s*rm\s+-rf/, reason: 'rm -rf command (force recursive deletion)' },
+      { pattern: /^\s*>.*[\w]/, reason: 'file truncation with > operator' },
+      { pattern: /^\s*:\s*>/, reason: 'dangerous :> truncation' },
+      { pattern: /mv\s+.*\/dev\/null/, reason: 'moving file to /dev/null' },
+    ];
+
+    for (const { pattern, reason } of destructivePatterns) {
+      if (pattern.test(trimmedCommand)) {
+        return { isDestructive: true, reason };
+      }
+    }
+
+    return { isDestructive: false };
+  }
+
   async #validateShellCommand(command: string): Promise<{
     shouldModify: boolean;
     modifiedCommand?: string;
     warning?: string;
+    isDestructive?: boolean;
+    destructiveReason?: string;
   }> {
     const trimmedCommand = command.trim();
+
+    // Check if command is destructive
+    const { isDestructive, reason: destructiveReason } = this.#isDestructiveCommand(trimmedCommand);
 
     // Handle rm commands that might fail due to missing files
     if (trimmedCommand.startsWith('rm ') && !trimmedCommand.includes(' -f')) {
@@ -685,6 +727,8 @@ export class ActionRunner {
               shouldModify: true,
               modifiedCommand: `rm -f ${filePaths.join(' ')}`,
               warning: 'Added -f flag to rm command as target files do not exist',
+              isDestructive,
+              destructiveReason,
             };
           } else if (existingFiles.length < filePaths.length) {
             // Some files don't exist, modify to only remove existing ones with -f for safety
@@ -692,6 +736,8 @@ export class ActionRunner {
               shouldModify: true,
               modifiedCommand: `rm -f ${filePaths.join(' ')}`,
               warning: 'Added -f flag to rm command as some target files do not exist',
+              isDestructive,
+              destructiveReason,
             };
           }
         } catch (error) {
@@ -739,7 +785,7 @@ export class ActionRunner {
       }
     }
 
-    return { shouldModify: false };
+    return { shouldModify: false, isDestructive, destructiveReason };
   }
 
   #createEnhancedShellError(
