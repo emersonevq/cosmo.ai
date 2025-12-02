@@ -45,7 +45,14 @@
     "failedToDeleteConversation": "Falha ao deletar conversa",
     "deleteSelected": "Deletar selecionados",
     "selectAtLeastOneChat": "Selecione pelo menos uma conversa para deletar",
-    "searchChats": "Pesquisar conversas..."
+    "searchChats": "Pesquisar conversas...",
+    "apiKeyLabel": "Chave de API:",
+    "setViaUI": "Definido via interface",
+    "setViaEnvironmentVariable": "Definido via variável de ambiente",
+    "notSet": "Não definido (defina via interface ou variável de ambiente)",
+    "enterAPIKey": "Digite a chave de API",
+    "saveAPIKey": "Salvar chave de API",
+    "editAPIKey": "Editar chave de API"
   },
   "sidebar": {
     "menu": "Menu",
