@@ -51,11 +51,13 @@ export const ArtifactCallbackSchema = z.object({
 export const LLMResponseSchema = z.object({
   message: z.string().min(1, 'Message cannot be empty'),
   artifacts: z.array(BoltArtifactSchema).optional(),
-  metadata: z.object({
-    timestamp: z.string().datetime().optional(),
-    responseType: z.enum(['text', 'artifact', 'mixed']).optional(),
-    executionMode: z.enum(['immediate', 'dry-run', 'preview']).optional(),
-  }).optional(),
+  metadata: z
+    .object({
+      timestamp: z.string().datetime().optional(),
+      responseType: z.enum(['text', 'artifact', 'mixed']).optional(),
+      executionMode: z.enum(['immediate', 'dry-run', 'preview']).optional(),
+    })
+    .optional(),
 });
 
 /**
@@ -78,7 +80,9 @@ export class LLMOutputValidator {
       return BoltActionSchema.parse(data);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        throw new Error(`Invalid BoltAction: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ')}`);
+        throw new Error(
+          `Invalid BoltAction: ${error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ')}`,
+        );
       }
       throw error;
     }
@@ -92,7 +96,9 @@ export class LLMOutputValidator {
       return BoltArtifactSchema.parse(data);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        throw new Error(`Invalid BoltArtifact: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ')}`);
+        throw new Error(
+          `Invalid BoltArtifact: ${error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ')}`,
+        );
       }
       throw error;
     }
@@ -106,7 +112,9 @@ export class LLMOutputValidator {
       return LLMResponseSchema.parse(data);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        throw new Error(`Invalid LLM Response: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ')}`);
+        throw new Error(
+          `Invalid LLM Response: ${error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ')}`,
+        );
       }
       throw error;
     }
@@ -115,14 +123,17 @@ export class LLMOutputValidator {
   /**
    * Safe parsing that returns result with errors array
    */
-  static safeParse(data: unknown, schema: z.ZodSchema): { success: boolean; data?: any; errors?: Array<{ path: string; message: string }> } {
+  static safeParse(
+    data: unknown,
+    schema: z.ZodSchema,
+  ): { success: boolean; data?: any; errors?: Array<{ path: string; message: string }> } {
     const result = schema.safeParse(data);
     if (result.success) {
       return { success: true, data: result.data };
     }
     return {
       success: false,
-      errors: result.error.errors.map(e => ({
+      errors: result.error.errors.map((e) => ({
         path: e.path.join('.'),
         message: e.message,
       })),
