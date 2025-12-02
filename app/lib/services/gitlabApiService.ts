@@ -476,7 +476,7 @@ export class GitLabApiService {
 
     const commitRequest: GitLabCommitRequest = {
       branch: 'main',
-      commit_message: 'Update from Bolt.diy',
+      commit_message: 'Update from Cosmos AI',
       actions,
     };
 
@@ -493,7 +493,7 @@ export class GitLabApiService {
 
         const updateCommitRequest: GitLabCommitRequest = {
           branch: 'main',
-          commit_message: 'Update from Bolt.diy',
+          commit_message: 'Update from Cosmos AI',
           actions: updateActions,
         };
 
