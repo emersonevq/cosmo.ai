@@ -97,7 +97,7 @@ export const APIKeyManager: React.FC<APIKeyManagerProps> = ({ provider, apiKey, 
               {apiKey ? (
                 <>
                   <div className="i-ph:check-circle-fill text-green-500 w-4 h-4" />
-                  <span className="text-xs text-green-500">Set via UI</span>
+                  <span className="text-xs text-green-500">{t('chat.setViaUI')}</span>
                 </>
               ) : isEnvKeySet ? (
                 <>
