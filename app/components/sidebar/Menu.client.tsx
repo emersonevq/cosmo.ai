@@ -122,7 +122,7 @@ export const Menu = () => {
 
       deleteChat(item.id)
         .then(() => {
-          toast.success('Chat deleted successfully', {
+          toast.success(t('chat.chatDeletedSuccessfully'), {
             position: 'bottom-right',
             autoClose: 3000,
           });
