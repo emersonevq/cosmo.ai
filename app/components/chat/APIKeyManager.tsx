@@ -121,7 +121,7 @@ export const APIKeyManager: React.FC<APIKeyManagerProps> = ({ provider, apiKey, 
             <input
               type="password"
               value={tempKey}
-              placeholder="Enter API Key"
+              placeholder={t('chat.enterAPIKey')}
               onChange={(e) => setTempKey(e.target.value)}
               className="w-[300px] px-3 py-1.5 text-sm rounded border border-bolt-elements-borderColor 
                         bg-bolt-elements-prompt-background text-bolt-elements-textPrimary 
