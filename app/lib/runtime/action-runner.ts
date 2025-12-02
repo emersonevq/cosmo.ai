@@ -270,6 +270,20 @@ export class ActionRunner {
       action.content = validationResult.modifiedCommand;
     }
 
+    // Alert if command is destructive
+    if (validationResult.isDestructive && validationResult.destructiveReason) {
+      const warningMessage = `Executing destructive command: ${validationResult.destructiveReason}\n\nCommand: ${action.content}\n\nThis operation cannot be undone. Ensure this is intentional.`;
+      logger.debug(`Destructive command detected: ${validationResult.destructiveReason}`);
+
+      this.onAlert?.({
+        type: 'warning',
+        title: 'Destructive Command Warning',
+        description: `About to execute: ${validationResult.destructiveReason}`,
+        content: warningMessage,
+        source: 'terminal',
+      });
+    }
+
     const resp = await shell.executeCommand(this.runnerId.get(), action.content, () => {
       logger.debug(`[${action.type}]:Aborting Action\n\n`, action);
       action.abort();
